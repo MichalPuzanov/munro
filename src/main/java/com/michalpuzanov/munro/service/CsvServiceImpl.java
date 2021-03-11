@@ -85,9 +85,9 @@ public class CsvServiceImpl implements CsvService{
 
             if (sort[0].contains("height")) {
               if (reverse) {
-                  result = currentRecords.stream().sorted(Comparator.comparingLong(MunroRecord::getHeightM).reversed()).collect(Collectors.toList());
+                  result = currentRecords.stream().sorted(Comparator.comparingDouble(MunroRecord::getHeightM).reversed()).collect(Collectors.toList());
               } else {
-                  result = currentRecords.stream().sorted(Comparator.comparingLong(MunroRecord::getHeightM)).collect(Collectors.toList());
+                  result = currentRecords.stream().sorted(Comparator.comparingDouble(MunroRecord::getHeightM)).collect(Collectors.toList());
               }
             } else {
                 if (reverse) {
@@ -100,6 +100,7 @@ public class CsvServiceImpl implements CsvService{
 
         if (sort.length == 2) {
             boolean[] reverse = {false,false};
+            Comparator<MunroRecord> comparator = null;
 
             if (sort[0].contains("desc")){
                 reverse[0] = true;
@@ -110,16 +111,34 @@ public class CsvServiceImpl implements CsvService{
 
             if (sort[0].contains("height")) {
 
+                if (reverse[0]) {
+                   comparator =  Comparator.comparingDouble(MunroRecord::getHeightM).reversed();
+                } else {
+                    comparator =  Comparator.comparingDouble(MunroRecord::getHeightM);
+                }
+                if (reverse[1]) {
+                    comparator =  comparator.thenComparing(MunroRecord::getName).reversed();
+                } else {
+                    comparator =  Comparator.comparing(MunroRecord::getName);
+                }
+
             } else {
 
+                if (reverse[0]) {
+                    comparator =  comparator.thenComparing(MunroRecord::getName).reversed();
+                } else {
+                    comparator = Comparator.comparing(MunroRecord::getName);
+                }
+                if (reverse[1]) {
+                    comparator =  Comparator.comparingDouble(MunroRecord::getHeightM).reversed();
+                } else {
+                    comparator =  Comparator.comparingDouble(MunroRecord::getHeightM);
+                }
             }
+           result = currentRecords.stream().sorted(comparator).collect(Collectors.toList());
         }
-
-
-
         return result;
     }
-
 
     @Override
     public boolean importCsvData(String resourceName) throws IOException {
@@ -141,7 +160,7 @@ public class CsvServiceImpl implements CsvService{
             munroRecord.setSmcSection(record.get("SMC Section"));
             munroRecord.setRhbSection(record.get("RHB Section"));
             munroRecord.set_Section(record.get("_Section"));
-            munroRecord.setHeightM(Long.parseLong(record.get("Height (m)")));
+            munroRecord.setHeightM(record.get("Height (m)").isEmpty() ? 0d : Double.parseDouble(record.get("Height (m)")));
             munroRecord.setHeightFt(record.get("Height (ft)"));
             munroRecord.setMap1_50(record.get("Map 1:50"));
             munroRecord.setMap1_25(record.get("Map 1:25"));

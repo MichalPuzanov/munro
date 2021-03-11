@@ -14,7 +14,7 @@ public class MunroRecord {
     private String smcSection;
     private String rhbSection;
     private String _Section;
-    private long heightM;
+    private double heightM;
     private String heightFt;
     private String map1_50;
     private String map1_25;

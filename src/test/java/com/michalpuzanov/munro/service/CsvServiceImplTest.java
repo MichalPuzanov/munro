@@ -40,7 +40,7 @@ public class CsvServiceImplTest {
 
     @Test(expected = NullPointerException.class)
     public void whenCsvFileDoesNotExist_thenNullPointerException() throws IOException {
-        csvServiceImpl.importCsvData("munrotab.csv");
+        csvServiceImpl.importCsvData("munrotabtest.csv");
     }
 
     @Test
