@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @Slf4j
@@ -30,46 +31,56 @@ public class CsvServiceImpl implements CsvService{
     }
 
     @Override
-    public List<MunroRecord> getMunroRecords(long size, String search, long minHeight, long maxHeight, String[] sort) {
-        return munroRecords.stream().limit(size).collect(Collectors.toList());
+    public List<MunroRecord> getMunroRecords(long limit, String search, long minHeight, long maxHeight, String[] sort) {
+
+        Stream<MunroRecord> result = minHeightMunroRecords(getMunroRecords().stream(),minHeight);
+        result = maxHeightMunroRecords(result,maxHeight);
+        result = searchMunroRecords(result,search);
+        result = sortMunroRecords(result,sort);
+        result = limitMunroRecords(result,limit);
+
+        return result.collect(Collectors.toList());
     }
 
-    public List<MunroRecord> limitMunroRecords(List<MunroRecord> currentRecords, long size) {
+    public Stream<MunroRecord> limitMunroRecords(Stream<MunroRecord> currentRecords, long size) {
         if (size == 0){
             return currentRecords;
         }
-        return currentRecords.stream().limit(size).collect(Collectors.toList());
+        return currentRecords.limit(size);
     }
 
-    public List<MunroRecord> searchMunroRecords(List<MunroRecord> currentRecords, String search){
+    public Stream<MunroRecord> searchMunroRecords(Stream<MunroRecord> currentRecords, String search){
         if ( search.equals("either")) {
-            return currentRecords.stream().filter( (rec) -> (rec.getYearPost1997().equals("Top") || rec.getYearPost1997().equals("Mun") ) ).collect(Collectors.toList());
+            return currentRecords.filter( (rec) -> (rec.getYearPost1997().equals("TOP") || rec.getYearPost1997().equals("MUN") ) );
         }
-        if ( search.equals("Mungo")) {
-            return currentRecords.stream().filter( (rec) -> rec.getYearPost1997().equals("Mun")).collect(Collectors.toList());
+        if ( search.equals("Munro")) {
+            return currentRecords.filter( (rec) -> rec.getYearPost1997().equals("MUN"));
         }
-        if ( search.equals("Mungo Top")) {
-            return currentRecords.stream().filter( (rec) -> rec.getYearPost1997().equals("Top")).collect(Collectors.toList());
+        if ( search.equals("Munro Top")) {
+            return currentRecords.filter( (rec) -> rec.getYearPost1997().equals("TOP"));
         }
         return null;
     }
 
-    public List<MunroRecord> minHeightMunroRecords(List<MunroRecord> currentRecords, long minHeight){
+    public Stream<MunroRecord> minHeightMunroRecords(Stream<MunroRecord> currentRecords, long minHeight){
         if (minHeight == 0){
             return currentRecords;
         }
-        return currentRecords.stream().filter( (rec) -> rec.getHeightM() >= minHeight).collect(Collectors.toList());
+        return currentRecords.filter( (rec) -> rec.getHeightM() >= minHeight);
     }
 
-    public List<MunroRecord> maxHeightMunroRecords(List<MunroRecord> currentRecords, long maxHeight){
+    public Stream<MunroRecord> maxHeightMunroRecords(Stream<MunroRecord> currentRecords, long maxHeight){
         if (maxHeight == 0){
             return currentRecords;
         }
-        return currentRecords.stream().filter( (rec) -> rec.getHeightM() <= maxHeight).collect(Collectors.toList());
+        return currentRecords.filter( (rec) -> rec.getHeightM() <= maxHeight);
     }
 
-    public List<MunroRecord> sortHeightMunroRecords(List<MunroRecord> currentRecords, String[] sort){
-        List<MunroRecord> result = null;
+    public Stream<MunroRecord> sortMunroRecords(Stream<MunroRecord> currentRecords, String[] sort){
+        Stream<MunroRecord> result = null;
+
+        Comparator<MunroRecord> heightComparator = Comparator.comparingDouble(MunroRecord::getHeightM);
+        Comparator<MunroRecord> nameComparator = Comparator.comparing(MunroRecord::getName);
 
         if (sort.length == 0){
             result = currentRecords;
@@ -85,15 +96,15 @@ public class CsvServiceImpl implements CsvService{
 
             if (sort[0].contains("height")) {
               if (reverse) {
-                  result = currentRecords.stream().sorted(Comparator.comparingDouble(MunroRecord::getHeightM).reversed()).collect(Collectors.toList());
+                  result = currentRecords.sorted(heightComparator.reversed());
               } else {
-                  result = currentRecords.stream().sorted(Comparator.comparingDouble(MunroRecord::getHeightM)).collect(Collectors.toList());
+                  result = currentRecords.sorted(heightComparator);
               }
             } else {
                 if (reverse) {
-                    result = currentRecords.stream().sorted(Comparator.comparing(MunroRecord::getName).reversed()).collect(Collectors.toList());
+                    result = currentRecords.sorted(nameComparator.reversed());
                 } else {
-                    result = currentRecords.stream().sorted(Comparator.comparing(MunroRecord::getName)).collect(Collectors.toList());
+                    result = currentRecords.sorted(nameComparator);
                 }
             }
         }
@@ -112,30 +123,30 @@ public class CsvServiceImpl implements CsvService{
             if (sort[0].contains("height")) {
 
                 if (reverse[0]) {
-                   comparator =  Comparator.comparingDouble(MunroRecord::getHeightM).reversed();
+                   comparator =  heightComparator.reversed();
                 } else {
-                    comparator =  Comparator.comparingDouble(MunroRecord::getHeightM);
+                    comparator =  heightComparator;
                 }
                 if (reverse[1]) {
-                    comparator =  comparator.thenComparing(MunroRecord::getName).reversed();
+                    comparator =  comparator.thenComparing(nameComparator).reversed();
                 } else {
-                    comparator =  Comparator.comparing(MunroRecord::getName);
+                    comparator =  comparator.thenComparing(nameComparator);
                 }
 
             } else {
 
                 if (reverse[0]) {
-                    comparator =  comparator.thenComparing(MunroRecord::getName).reversed();
+                    comparator = nameComparator.reversed();
                 } else {
-                    comparator = Comparator.comparing(MunroRecord::getName);
+                    comparator = nameComparator;
                 }
                 if (reverse[1]) {
-                    comparator =  Comparator.comparingDouble(MunroRecord::getHeightM).reversed();
+                    comparator =  comparator.thenComparing(heightComparator).reversed();
                 } else {
-                    comparator =  Comparator.comparingDouble(MunroRecord::getHeightM);
+                    comparator =  comparator.thenComparing(heightComparator);
                 }
             }
-           result = currentRecords.stream().sorted(comparator).collect(Collectors.toList());
+           result = currentRecords.sorted(comparator);
         }
         return result;
     }

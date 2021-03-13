@@ -18,13 +18,13 @@ public class MunroRecordController {
     }
 
     @GetMapping("/records")
-    public List<MunroRecord> hello(@RequestParam(required = false,defaultValue = "0") long size,
+    public List<MunroRecord> findMunroRecords(@RequestParam(required = false,defaultValue = "0") long limit,
                                    @RequestParam(required = false,defaultValue = "either") String search,
                                    @RequestParam(required = false,defaultValue = "0") long minHeight,
                                    @RequestParam(required = false,defaultValue = "0") long maxHeight,
                                    @RequestParam(required = false,defaultValue = "") String[] sort) {
 
-        return csvService.getMunroRecords(size,search,minHeight,maxHeight,sort);
+        return csvService.getMunroRecords(limit,search,minHeight,maxHeight,sort);
     }
 
 
