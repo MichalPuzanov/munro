@@ -20,6 +20,8 @@ import java.util.stream.Stream;
 @Slf4j
 public class CsvServiceImpl implements CsvService{
 
+    public static final String METHOD_STARTED = "Method Started";
+    public static final String METHOD_FINISHED = "Method Finished";
     private List<MunroRecord> munroRecords;
 
     public List<MunroRecord> getMunroRecords() {
@@ -31,52 +33,72 @@ public class CsvServiceImpl implements CsvService{
     }
 
     @Override
-    public List<MunroRecord> getMunroRecords(long limit, String search, long minHeight, long maxHeight, String[] sort) {
-
+    public List<MunroRecord> getMunroRecords(long limit, String search, double minHeight, double maxHeight, String[] sort) {
+        log.debug(METHOD_STARTED);
         Stream<MunroRecord> result = minHeightMunroRecords(getMunroRecords().stream(),minHeight);
         result = maxHeightMunroRecords(result,maxHeight);
         result = searchMunroRecords(result,search);
         result = sortMunroRecords(result,sort);
+        //limit must be last
         result = limitMunroRecords(result,limit);
-
+        log.debug(METHOD_FINISHED);
         return result.collect(Collectors.toList());
     }
 
     public Stream<MunroRecord> limitMunroRecords(Stream<MunroRecord> currentRecords, long size) {
+        log.debug(METHOD_STARTED);
+        Stream<MunroRecord> result = null;
         if (size == 0){
-            return currentRecords;
+            result = currentRecords;
+        } else {
+            result = currentRecords.limit(size);
         }
-        return currentRecords.limit(size);
+        log.debug(METHOD_FINISHED);
+        return result;
     }
 
     public Stream<MunroRecord> searchMunroRecords(Stream<MunroRecord> currentRecords, String search){
+        log.debug(METHOD_STARTED);
+        Stream<MunroRecord> result = null;
         if ( search.equals("either")) {
-            return currentRecords.filter( (rec) -> (rec.getYearPost1997().equals("TOP") || rec.getYearPost1997().equals("MUN") ) );
+            result = currentRecords.filter( rec -> (rec.getYearPost1997().equals("TOP") || rec.getYearPost1997().equals("MUN") ) );
         }
-        if ( search.equals("Munro")) {
-            return currentRecords.filter( (rec) -> rec.getYearPost1997().equals("MUN"));
+        else if ( search.equals("Munro")) {
+            result = currentRecords.filter( rec -> rec.getYearPost1997().equals("MUN"));
         }
-        if ( search.equals("Munro Top")) {
-            return currentRecords.filter( (rec) -> rec.getYearPost1997().equals("TOP"));
+        else if ( search.equals("Top")) {
+            result = currentRecords.filter( rec -> rec.getYearPost1997().equals("TOP"));
         }
-        return null;
+        log.debug(METHOD_FINISHED);
+        return result;
     }
 
-    public Stream<MunroRecord> minHeightMunroRecords(Stream<MunroRecord> currentRecords, long minHeight){
+    public Stream<MunroRecord> minHeightMunroRecords(Stream<MunroRecord> currentRecords, double minHeight){
+        log.debug(METHOD_STARTED);
+        Stream<MunroRecord> result = null;
         if (minHeight == 0){
-            return currentRecords;
+            result = currentRecords;
+        } else {
+            result = currentRecords.filter( rec -> rec.getHeightM() >= minHeight);
         }
-        return currentRecords.filter( (rec) -> rec.getHeightM() >= minHeight);
+        log.debug(METHOD_FINISHED);
+        return result;
     }
 
-    public Stream<MunroRecord> maxHeightMunroRecords(Stream<MunroRecord> currentRecords, long maxHeight){
+    public Stream<MunroRecord> maxHeightMunroRecords(Stream<MunroRecord> currentRecords, double maxHeight){
+        log.debug(METHOD_STARTED);
+        Stream<MunroRecord> result = null;
         if (maxHeight == 0){
-            return currentRecords;
+            result = currentRecords;
+        } else {
+            result = currentRecords.filter( rec -> rec.getHeightM() <= maxHeight);
         }
-        return currentRecords.filter( (rec) -> rec.getHeightM() <= maxHeight);
+        log.debug(METHOD_FINISHED);
+        return result;
     }
 
     public Stream<MunroRecord> sortMunroRecords(Stream<MunroRecord> currentRecords, String[] sort){
+        log.debug(METHOD_STARTED);
         Stream<MunroRecord> result = null;
 
         Comparator<MunroRecord> heightComparator = Comparator.comparingDouble(MunroRecord::getHeightM);
@@ -84,12 +106,8 @@ public class CsvServiceImpl implements CsvService{
 
         if (sort.length == 0){
             result = currentRecords;
-        }
-
-        if (sort.length == 1){
-
+        } else if (sort.length == 1){
             boolean reverse = false;
-
             if (sort[0].contains("desc")){
                 reverse = true;
             }
@@ -107,12 +125,10 @@ public class CsvServiceImpl implements CsvService{
                     result = currentRecords.sorted(nameComparator);
                 }
             }
-        }
-
-        if (sort.length == 2) {
-            boolean[] reverse = {false,false};
+        } else if (sort.length == 2) {
             Comparator<MunroRecord> comparator = null;
 
+            boolean[] reverse = {false,false};
             if (sort[0].contains("desc")){
                 reverse[0] = true;
             }
@@ -121,7 +137,6 @@ public class CsvServiceImpl implements CsvService{
             }
 
             if (sort[0].contains("height")) {
-
                 if (reverse[0]) {
                    comparator =  heightComparator.reversed();
                 } else {
@@ -132,9 +147,7 @@ public class CsvServiceImpl implements CsvService{
                 } else {
                     comparator =  comparator.thenComparing(nameComparator);
                 }
-
             } else {
-
                 if (reverse[0]) {
                     comparator = nameComparator.reversed();
                 } else {
@@ -148,12 +161,13 @@ public class CsvServiceImpl implements CsvService{
             }
            result = currentRecords.sorted(comparator);
         }
+        log.debug(METHOD_FINISHED);
         return result;
     }
 
     @Override
     public boolean importCsvData(String resourceName) throws IOException {
-        log.debug("Method started");
+        log.debug(METHOD_STARTED);
         boolean result = false;
         ClassLoader classLoader = getClass().getClassLoader();
         File file = new File(classLoader.getResource(resourceName).getFile());
@@ -195,7 +209,7 @@ public class CsvServiceImpl implements CsvService{
         }
         result = true;
         log.debug("Imported " + munroRecords.size() + " records");
-        log.debug("Method finished");
+        log.debug(METHOD_FINISHED);
         return result;
     }
 }

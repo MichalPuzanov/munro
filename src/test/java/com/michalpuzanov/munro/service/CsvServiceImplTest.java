@@ -91,7 +91,7 @@ public class CsvServiceImplTest {
 
         results.forEach(( result -> assertThat(result.getYearPost1997()).isEqualTo("MUN")));
         int mungoSize = results.size();
-        results = csvServiceImpl.searchMunroRecords(csvServiceImpl.getMunroRecords().stream(), "Munro Top").collect(Collectors.toList());
+        results = csvServiceImpl.searchMunroRecords(csvServiceImpl.getMunroRecords().stream(), "Top").collect(Collectors.toList());
         results.forEach(( result -> assertThat(result.getYearPost1997()).isEqualTo("TOP")));
         int topSize = results.size();
         results = csvServiceImpl.searchMunroRecords(csvServiceImpl.getMunroRecords().stream(), "either").collect(Collectors.toList());

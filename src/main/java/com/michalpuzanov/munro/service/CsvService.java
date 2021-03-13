@@ -8,6 +8,6 @@ import java.util.List;
 public interface CsvService {
 
     boolean importCsvData(String resourceName) throws IOException;
-    List<MunroRecord> getMunroRecords(long size, String search, long minHeight, long maxHeight, String[] sort);
+    List<MunroRecord> getMunroRecords(long size, String search, double minHeight, double maxHeight, String[] sort);
 
 }
